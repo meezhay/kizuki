@@ -1,0 +1,618 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Kizuki</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@500&family=IBM+Plex+Sans+JP:wght@400;600&family=IBM+Plex+Sans:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --surface:#f7f6f2; --raised:#ffffff; --ink:#17201d; --muted:#55605b; --line:#d9dcd6;
+  --primary:#0f5c55; --on-primary:#ffffff; --primary-soft:#d6ebe7; --accent:#e8a33d;
+  --positive:#2f7d32; --negative:#b3261e; --negative-soft:#f6dedb;
+  --sans:"IBM Plex Sans","IBM Plex Sans JP",system-ui,-apple-system,"Hiragino Sans","Yu Gothic",sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --surface:#121614; --raised:#1b201e; --ink:#eef1ee; --muted:#a3ada8; --line:#2c3430;
+    --primary:#4fb3a6; --on-primary:#121614; --primary-soft:#1f3a36; --accent:#f0b45a;
+    --positive:#6cc070; --negative:#f2867e; --negative-soft:#3a2321; color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --surface:#121614; --raised:#1b201e; --ink:#eef1ee; --muted:#a3ada8; --line:#2c3430;
+  --primary:#4fb3a6; --on-primary:#121614; --primary-soft:#1f3a36; --accent:#f0b45a;
+  --positive:#6cc070; --negative:#f2867e; --negative-soft:#3a2321; color-scheme:dark;
+}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--surface);color:var(--ink);font-family:var(--sans);font-size:15px;line-height:22px}
+button{font:inherit;cursor:pointer}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.wrap{max-width:1180px;margin:0 auto;padding:16px}
+@media (min-width:800px){.wrap{padding:32px}}
+header.top{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:8px 24px;margin-bottom:24px}
+.brand{font-size:28px;line-height:34px;font-weight:600;margin:0}
+.brand small{display:block;font-size:13px;line-height:18px;font-weight:400;color:var(--muted)}
+.bar{display:flex;flex-wrap:wrap;gap:8px 16px;align-items:center}
+.seg{display:flex;flex-wrap:wrap;gap:6px}
+.seg button{border:1px solid var(--line);background:var(--raised);color:var(--ink);border-radius:8px;padding:6px 12px}
+.seg button[aria-pressed="true"]{background:var(--primary);color:var(--on-primary);border-color:var(--primary)}
+.sync{font-size:13px;line-height:18px;color:var(--muted);margin:0 0 16px}
+.grid{display:grid;gap:16px;grid-template-columns:1fr}
+@media (min-width:900px){body.demo .grid{grid-template-columns:1.15fr 1fr 1fr}}
+.panel{background:var(--raised);border:1px solid var(--line);border-radius:14px;padding:20px;display:flex;flex-direction:column;gap:16px;min-height:420px}
+.panel h2{font-size:20px;line-height:28px;margin:0;font-weight:600}
+.panel .who{font-size:13px;line-height:18px;color:var(--muted);margin:-12px 0 0}
+body:not(.demo) .panel[data-role]{display:none}
+body.r-wearer .panel[data-role="wearer"],body.r-family1 .panel[data-role="family1"],body.r-family2 .panel[data-role="family2"]{display:flex;max-width:520px;margin:0 auto;width:100%}
+.face{align-self:center;width:min(300px,78vw);aspect-ratio:1;border-radius:50%;background:var(--surface);border:10px solid var(--ink);display:grid;place-items:center;position:relative;text-align:center}
+.face svg{position:absolute;inset:-10px;width:calc(100% + 20px);height:calc(100% + 20px);transform:rotate(-90deg)}
+.face .ring{fill:none;stroke:var(--accent);stroke-width:10;stroke-linecap:round;transition:stroke-dashoffset .25s linear}
+.face-inner{padding:28px;display:flex;flex-direction:column;align-items:center;gap:6px}
+.face-q{font-size:30px;line-height:36px;font-weight:600}
+.face-sub{font-size:15px;line-height:20px;color:var(--muted)}
+.face-count{font-family:var(--mono);font-size:44px;line-height:48px}
+.face-msg{font-size:22px;line-height:28px;font-weight:600}
+.face.alerting{border-color:var(--negative)}
+.face.ok{border-color:var(--positive)}
+.big{border:0;border-radius:12px;padding:18px 20px;font-size:22px;line-height:28px;font-weight:600;width:100%}
+.b-primary{background:var(--primary);color:var(--on-primary)}
+.b-help{background:transparent;color:var(--negative);border:2px solid var(--negative)}
+.b-quiet{background:transparent;color:var(--ink);border:1px solid var(--line);font-size:17px;padding:14px 16px}
+.row{display:flex;gap:8px}
+.row>*{flex:1}
+.mic{font-size:13px;line-height:18px;color:var(--muted);display:flex;gap:8px;align-items:flex-start}
+.dot{flex:none;width:10px;height:10px;border-radius:50%;background:var(--line);margin-top:4px}
+.dot.on{background:var(--positive)}
+.dot.off{background:var(--negative)}
+.heard{font-family:var(--mono);color:var(--ink)}
+.alert{border-radius:12px;padding:16px;background:var(--negative-soft);border:2px solid var(--negative);display:flex;flex-direction:column;gap:8px}
+.alert .t{font-size:20px;line-height:26px;font-weight:600}
+.alert .clock{font-family:var(--mono);font-size:13px;color:var(--muted)}
+.calm{border-radius:12px;padding:16px;background:var(--surface);border:1px solid var(--line);color:var(--muted)}
+.done{border-radius:12px;padding:16px;background:var(--primary-soft)}
+.done strong{display:block;font-size:18px;line-height:24px}
+.sound{font-size:13px;line-height:18px;color:var(--muted)}
+.sound button{border:1px solid var(--line);background:transparent;color:var(--ink);border-radius:8px;padding:4px 10px;font-size:13px}
+.lower{display:grid;gap:16px;grid-template-columns:1fr;margin-top:16px}
+@media (min-width:900px){.lower{grid-template-columns:1fr 1.3fr}}
+body:not(.demo) .lower{display:none}
+.card{background:var(--raised);border:1px solid var(--line);border-radius:14px;padding:20px}
+.card h3{font-size:16px;line-height:22px;margin:0 0 12px;font-weight:600}
+.fields{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.fields label{display:flex;flex-direction:column;gap:4px;font-size:13px;line-height:18px;color:var(--muted)}
+.fields input{font:inherit;color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:8px}
+.fields .full{grid-column:1/-1}
+.actions{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
+.actions button{border:1px solid var(--line);background:transparent;color:var(--ink);border-radius:8px;padding:8px 14px}
+.actions .save{background:var(--primary);color:var(--on-primary);border-color:var(--primary)}
+.mictest{margin-top:12px;font-size:13px;line-height:18px;color:var(--ink);min-height:18px}
+.logwrap{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:13px;line-height:18px}
+th,td{text-align:left;padding:6px 8px;border-bottom:1px solid var(--line);vertical-align:top}
+th{color:var(--muted);font-weight:600}
+td.t{font-family:var(--mono);white-space:nowrap;color:var(--muted)}
+.empty{color:var(--muted)}
+.note{font-size:13px;line-height:18px;color:var(--muted);margin:12px 0 0}
+@media (prefers-reduced-motion: reduce){.face .ring{transition:none}}
+</style>
+</head>
+<body class="demo">
+<div class="wrap">
+  <header class="top">
+    <h1 class="brand">Kizuki（キヅキ）<small id="tagline"></small></h1>
+    <div class="bar">
+      <nav class="seg" id="roles"></nav>
+      <div class="seg" id="langs" aria-label="Language"><button data-lang="ja">日本語</button><button data-lang="en">English</button></div>
+    </div>
+  </header>
+  <p class="sync" id="sync"></p>
+  <div class="grid">
+    <section class="panel" data-role="wearer">
+      <h2 id="hWearer"></h2>
+      <p class="who" id="wearerWho"></p>
+      <div class="face" id="face">
+        <svg viewBox="0 0 100 100" aria-hidden="true"><circle class="ring" id="ring" cx="50" cy="50" r="45" stroke-dasharray="282.74" stroke-dashoffset="282.74"/></svg>
+        <div class="face-inner" id="faceInner" aria-live="polite"></div>
+      </div>
+      <div id="wearerActions"></div>
+      <div class="mic"><span class="dot" id="micDot"></span><span id="micText"></span></div>
+    </section>
+    <section class="panel" data-role="family1">
+      <h2 id="hF1"></h2>
+      <p class="who" id="f1Who"></p>
+      <div id="f1Body" aria-live="assertive"></div>
+      <p class="sound" id="f1Sound"></p>
+    </section>
+    <section class="panel" data-role="family2">
+      <h2 id="hF2"></h2>
+      <p class="who" id="f2Who"></p>
+      <div id="f2Body" aria-live="assertive"></div>
+      <p class="sound" id="f2Sound"></p>
+    </section>
+  </div>
+  <div class="lower">
+    <section class="card">
+      <h3 id="hSetup"></h3>
+      <form id="setup" class="fields" onsubmit="return false">
+        <label class="full"><span id="lWearer"></span><input name="wearerName" maxlength="40"></label>
+        <label><span id="lC1"></span><input name="c1Name" maxlength="40"></label>
+        <label><span id="lC2"></span><input name="c2Name" maxlength="40"></label>
+        <label><span id="lAsk"></span><input name="askSec" type="number" min="10" max="120"></label>
+        <label><span id="lContact"></span><input name="contactSec" type="number" min="5" max="600"></label>
+      </form>
+      <div class="actions">
+        <button class="save" id="saveSetup"></button>
+        <button id="micTestBtn"></button>
+        <button id="resetBtn"></button>
+        <button id="clearLog"></button>
+      </div>
+      <p class="mictest" id="micTest" aria-live="polite"></p>
+      <p class="note" id="setupNote"></p>
+    </section>
+    <section class="card">
+      <h3 id="hLog"></h3>
+      <div class="logwrap"><table><thead><tr><th id="thTime"></th><th id="thEvent"></th></tr></thead><tbody id="log"></tbody></table></div>
+    </section>
+  </div>
+</div>
+<script>
+(function(){
+  "use strict";
+  const VIBRATE_SEC = 6;
+  const T = {
+    ja: {
+      tagline:"声にならない夜も、見逃さない。 見守りと通知の試作版（転倒はシミュレーションです）",
+      roles:["3画面","本人","連絡先1","連絡先2"],
+      syncLocal:"この画面だけで動いています。複数のスマホをつなぐには、Claude 内で公開ページを開いてください。",
+      syncLive:"ライブ：このページを開いている全スマホで、同じアラートを共有しています。",
+      syncErr:c=>"変更を保存できませんでした（"+c+"）。この画面は単独で動き続けます。",
+      syncDead:c=>"ライブ接続が切れました（"+c+"）。再読み込みしてください。",
+      hWearer:"本人の時計", hF1:"連絡先1のスマホ", hF2:"連絡先2のスマホ",
+      idleMsg:"見守り中", idleSub:"いつも通りお過ごしください",
+      simulate:"転倒をシミュレーション",
+      vibrating:"振動しています", ask:"大丈夫ですか？",
+      fine:"大丈夫", help:"助けて",
+      safeMsg:"よかったです", safeSub:"誰にも通知していません",
+      back:"見守りに戻る",
+      alertingMsg:"ご家族に連絡中", alertingSub:n=>n+"さんに通知しました",
+      confirmedMsg:"確認されました", confirmedSub:n=>n+"さんがアラートを確認しました",
+      sayAsk:"大丈夫ですか？　大丈夫なら、だいじょうぶ、と言ってください。",
+      sayAlerting:"ご家族に知らせています。",
+      sayConfirmed:n=>n+"さんが確認しました。",
+      micIdle:"転倒のシミュレーションで音声認識が始まります。",
+      micOn:"聞き取り中：「大丈夫」または「助けて」",
+      micSpeaking:"問いかけ中（その間は聞き取りを止めています）",
+      micNoSR:"このブラウザは音声認識に対応していません。Android の Chrome でお試しください。",
+      micBlocked:c=>"マイクが使えません（"+c+"）。ボタンで応答してください。",
+      micOff:"聞き取りは止まっています。",
+      heard:"聞こえた言葉：",
+      famAlertT:"転倒の可能性があります",
+      famWhyFall:n=>n+"さんが「大丈夫ですか？」に応答しませんでした。",
+      famWhyHelp:n=>n+"さんが助けを求めています。",
+      seen:"確認しました（対応します）",
+      sent:s=>s+"秒前に送信",
+      next:s=>"・"+s+"秒後に次の連絡先へ",
+      last:"・このデモの最後の連絡先です",
+      youConfirmed:"あなたがこのアラートを確認しました",
+      otherConfirmed:n=>n+"さんが対応しています",
+      closed:"全員のアラートは閉じられました。",
+      waitC1:n=>n+"さんに通知中です。時間内に確認がなければ、あなたに通知されます。",
+      asking:n=>n+"さんの時計が「大丈夫ですか？」と確認中です。まだ通知はありません。",
+      noAlerts:n=>"アラートはありません。"+n+"さんは大丈夫です。",
+      soundOff:"通知音はオフです。", soundOn:"通知音をオンにする",
+      hSetup:"設定", lWearer:"本人の名前", lC1:"連絡先1", lC2:"連絡先2", lAsk:"応答までの秒数", lContact:"連絡先ごとの秒数",
+      save:"設定を保存", micTest:"マイクをテスト", reset:"待機に戻す", clear:"記録を消去",
+      micTestListening:"話してください（6秒間）…", micTestHeard:t=>"聞こえました：「"+t+"」　マイクは使えます。",
+      micTestNone:"何も聞こえませんでした。マイクに近づいてもう一度お試しください。",
+      setupNote:"転倒後、まず"+VIBRATE_SEC+"秒間振動し、応答がなければ一度だけ「大丈夫ですか？」と声で問いかけます。その後は静かに聞き取ります。振動は Android のみ対応です。",
+      hLog:"テスト記録", thTime:"時刻", thEvent:"出来事", logEmpty:"まだ記録はありません。転倒をシミュレーションしてテストを始めてください。",
+      logFall:"転倒の可能性を検知。振動で確認を開始。",
+      logSpoke:"「大丈夫ですか？」と声で問いかけ。",
+      logSafe:(by,s)=>"本人が「大丈夫」と応答（"+by+"、"+s+"秒後）。誰にも通知していません。",
+      logHelp:(by,n)=>"本人が助けを求めました（"+by+"）。"+n+"さんに通知。",
+      logNoAns:(s,n)=>s+"秒間応答なし。"+n+"さんに通知。",
+      logEsc:(a,s,b)=>a+"さんが"+s+"秒以内に確認せず。"+b+"さんに通知。",
+      logSeen:(n,s)=>n+"さんが通知から"+s+"秒後に確認。",
+      logSetup:(a,c)=>"設定を保存：応答"+a+"秒、連絡先ごと"+c+"秒。",
+      logReset:"待機に戻しました。",
+      byTap:"ボタン", byVoice:t=>"音声「"+t+"」",
+      defaults:{wearerName:"田中 博", c1Name:"ゆき（娘）", c2Name:"健二（近所の方）"}
+    },
+    en: {
+      tagline:"Even on nights when words fail, no one is overlooked. Prototype of the alert service (falls are simulated).",
+      roles:["All three","Wearer","Contact 1","Contact 2"],
+      syncLocal:"Running on this screen only. Open the published page inside Claude to link several phones.",
+      syncLive:"Live: every phone with this page open shares one alert.",
+      syncErr:c=>"Couldn’t save the change ("+c+"). This screen keeps working on its own.",
+      syncDead:c=>"Live link stopped ("+c+"). Reload the page to reconnect.",
+      hWearer:"Wearer’s watch", hF1:"Contact 1’s phone", hF2:"Contact 2’s phone",
+      idleMsg:"Watching over you", idleSub:"Go about your day as usual",
+      simulate:"Simulate a fall",
+      vibrating:"Vibrating", ask:"Are you OK?",
+      fine:"I’m fine", help:"Help",
+      safeMsg:"Glad you’re OK", safeSub:"Nobody was alerted",
+      back:"Back to watching",
+      alertingMsg:"Alerting your family", alertingSub:n=>n+" has been alerted",
+      confirmedMsg:"Help is aware", confirmedSub:n=>n+" has seen your alert",
+      sayAsk:"Are you OK? If you are OK, say: I’m fine.",
+      sayAlerting:"Alerting your family now.",
+      sayConfirmed:n=>n+" has seen your alert.",
+      micIdle:"Listening starts when a fall is simulated.",
+      micOn:"Listening for “I’m fine” or “help”",
+      micSpeaking:"Asking out loud (listening pauses meanwhile)",
+      micNoSR:"This browser can’t do speech recognition. Try Chrome on Android.",
+      micBlocked:c=>"Microphone unavailable ("+c+"). Answer with the buttons.",
+      micOff:"Not listening.",
+      heard:"Heard: ",
+      famAlertT:"Possible fall",
+      famWhyFall:n=>n+" didn’t answer “Are you OK?”.",
+      famWhyHelp:n=>n+" asked for help.",
+      seen:"I’ve seen it. I’m responding",
+      sent:s=>"Sent "+s+" s ago",
+      next:s=>" · moves to the next contact in "+s+" s",
+      last:" · last contact in this demo",
+      youConfirmed:"You confirmed this alert",
+      otherConfirmed:n=>n+" is responding",
+      closed:"The alert is closed for everyone.",
+      waitC1:n=>"An alert went to "+n+". You’ll be alerted if they don’t confirm in time.",
+      asking:n=>n+"’s watch is asking “Are you OK?”. No alert yet.",
+      noAlerts:n=>"No alerts. "+n+" is OK.",
+      soundOff:"Alert sound is off.", soundOn:"Turn on sound",
+      hSetup:"Setup", lWearer:"Wearer’s name", lC1:"Contact 1", lC2:"Contact 2", lAsk:"Seconds to answer", lContact:"Seconds per contact",
+      save:"Save setup", micTest:"Test microphone", reset:"Reset to idle", clear:"Clear log",
+      micTestListening:"Speak now (6 seconds)…", micTestHeard:t=>"Heard: “"+t+"”. The microphone works.",
+      micTestNone:"Heard nothing. Move closer to the microphone and try again.",
+      setupNote:"After a fall, the watch vibrates for "+VIBRATE_SEC+" seconds first. If there’s no answer, it asks “Are you OK?” out loud once, then listens quietly. Vibration works on Android only.",
+      hLog:"Test log", thTime:"Time", thEvent:"Event", logEmpty:"No events yet. Simulate a fall to start a test.",
+      logFall:"Possible fall detected. Vibrating to check.",
+      logSpoke:"Asked “Are you OK?” out loud.",
+      logSafe:(by,s)=>"Wearer answered “I’m fine” ("+by+", after "+s+" s). Nobody was alerted.",
+      logHelp:(by,n)=>"Wearer asked for help ("+by+"). Alerting "+n+".",
+      logNoAns:(s,n)=>"No answer in "+s+" s. Alerting "+n+".",
+      logEsc:(a,s,b)=>a+" didn’t confirm within "+s+" s. Alerting "+b+".",
+      logSeen:(n,s)=>n+" confirmed seeing the alert "+s+" s after it was sent.",
+      logSetup:(a,c)=>"Setup saved: "+a+" s to answer, "+c+" s per contact.",
+      logReset:"Reset to idle.",
+      byTap:"button", byVoice:t=>"voice: “"+t+"”",
+      defaults:{wearerName:"Hiroshi Tanaka", c1Name:"Yuki (daughter)", c2Name:"Kenji (neighbour)"}
+    }
+  };
+  const WORDS = {
+    ja: {help:/助けて|たすけて|助け|救急|痛い|いたい|じゃない|ではない/, fine:/大丈夫|だいじょうぶ|平気|へいき|はい|オッケー/},
+    en: {help:/\bhelp\b|not ok|not okay|not fine|\bhurt|\bpain\b/i, fine:/i'?m fine|i am fine|i'?m ok|i'?m okay|\bok\b|\bokay\b|\byes\b|\bfine\b/i}
+  };
+  const BASE = {askSec:30, contactSec:30, lang:"ja"};
+  const IDLE = {phase:"idle", askDeadline:0, spokeAt:0, alertAt:0, contactDeadline:0, reason:"", confirmedBy:"", startedAt:0};
+  let state = Object.assign({}, IDLE, {settings:Object.assign({}, BASE), log:[]});
+  let prevPhase = "idle", docRef = null, writeChain = Promise.resolve(), role = "";
+  const $ = id => document.getElementById(id);
+  const L = () => (state.settings && state.settings.lang === "en") ? "en" : "ja";
+  const t = () => T[L()];
+  const S = () => { const s = Object.assign({}, BASE, state.settings || {}); const d = T[s.lang === "en" ? "en" : "ja"].defaults; ["wearerName","c1Name","c2Name"].forEach(k => { if (!s[k]) s[k] = d[k]; }); return s; };
+  const now = () => Date.now();
+  const stamp = () => new Date().toLocaleTimeString([], {hour:"2-digit", minute:"2-digit", second:"2-digit"});
+
+  /* roles */
+  const ROLE_KEYS = ["","wearer","family1","family2"];
+  function readRole(){
+    const h = (location.hash || "").replace("#","");
+    role = ROLE_KEYS.includes(h) ? h : "";
+    document.body.className = role ? "r-" + role : "demo";
+    render();
+  }
+  window.addEventListener("hashchange", readRole);
+  const isWearerView = () => role === "wearer" || role === "";
+  const isDriver = isWearerView;
+
+  /* sync */
+  function commit(patch, logText){
+    const log = (state.log || []).slice(-79);
+    if (logText) log.push({t:stamp(), text:logText});
+    state = Object.assign({}, state, patch, {log});
+    onStateChanged();
+    if (docRef){
+      const snap = JSON.parse(JSON.stringify(state));
+      writeChain = writeChain.then(() => docRef.set(snap)).catch(e => { $("sync").textContent = t().syncErr(e && e.code || "error"); });
+    }
+  }
+  let synced = false;
+  async function connect(){
+    let db = null;
+    try { db = window.claude && window.claude.use ? await window.claude.use("db") : null; } catch(e){ db = null; }
+    if (!db){ $("sync").textContent = t().syncLocal; return; }
+    docRef = db.doc("kizuki/session"); synced = true;
+    $("sync").textContent = t().syncLive;
+    docRef.onSnapshot(snap => {
+      if (!snap.exists) return;
+      const d = snap.data() || {};
+      state = Object.assign({}, IDLE, d, {settings:Object.assign({}, BASE, d.settings || {}), log:Array.isArray(d.log) ? d.log : []});
+      onStateChanged();
+    }, err => { $("sync").textContent = t().syncDead(err && err.code || "error"); });
+  }
+
+  /* transitions */
+  function simulateFall(){
+    primeAudio();
+    commit({phase:"asking", startedAt:now(), askDeadline:now() + S().askSec*1000, spokeAt:0, alertAt:0, contactDeadline:0, reason:"", confirmedBy:""}, t().logFall);
+  }
+  function wearerSafe(by){
+    if (state.phase !== "asking") return;
+    commit({phase:"safe"}, t().logSafe(by, Math.round((now() - state.startedAt)/1000)));
+  }
+  function wearerHelp(by){
+    if (!["asking","safe"].includes(state.phase)) return;
+    const s = S();
+    commit({phase:"alert1", reason:"help", alertAt:now(), contactDeadline:now() + s.contactSec*1000}, t().logHelp(by, s.c1Name));
+  }
+  function confirmSeen(who){
+    if (!["alert1","alert2"].includes(state.phase)) return;
+    const s = S();
+    commit({phase:"confirmed", confirmedBy:who}, t().logSeen(who === "c1" ? s.c1Name : s.c2Name, Math.round((now() - state.alertAt)/1000)));
+  }
+  function resetIdle(){ commit(Object.assign({}, IDLE), t().logReset); }
+  function tick(){
+    const s = S(), n = now();
+    if (isDriver()){
+      if (state.phase === "asking"){
+        if (!state.spokeAt && n - state.startedAt >= VIBRATE_SEC*1000){ commit({spokeAt:n}, t().logSpoke); }
+        else if (n >= state.askDeadline){ commit({phase:"alert1", reason:"no-response", alertAt:n, contactDeadline:n + s.contactSec*1000}, t().logNoAns(s.askSec, s.c1Name)); }
+      } else if (state.phase === "alert1" && n >= state.contactDeadline){
+        commit({phase:"alert2", contactDeadline:n + s.contactSec*1000}, t().logEsc(s.c1Name, s.contactSec, s.c2Name));
+      }
+    }
+    renderClock();
+  }
+  setInterval(tick, 250);
+
+  /* vibration */
+  let vibTimer = null;
+  function startVibrating(){
+    stopVibrating();
+    if (!navigator.vibrate) return;
+    const pulse = () => { try { navigator.vibrate([500,250,500]); } catch(e){} };
+    pulse(); vibTimer = setInterval(pulse, 2000);
+  }
+  function stopVibrating(){ clearInterval(vibTimer); vibTimer = null; try { navigator.vibrate && navigator.vibrate(0); } catch(e){} }
+
+  /* speech out: one utterance, slow, in one language */
+  let speaking = false, voices = [];
+  const loadVoices = () => { try { voices = speechSynthesis.getVoices(); } catch(e){} };
+  if ("speechSynthesis" in window){ loadVoices(); speechSynthesis.onvoiceschanged = loadVoices; }
+  function say(text, then){
+    if (!("speechSynthesis" in window)){ then && then(); return; }
+    speechSynthesis.cancel();
+    speaking = true; pauseListening(); mic("", t().micSpeaking);
+    const u = new SpeechSynthesisUtterance(text);
+    const lang = L() === "en" ? "en-US" : "ja-JP";
+    u.lang = lang; u.rate = 0.8;
+    const v = voices.find(v => v.lang && v.lang.toLowerCase().startsWith(lang.slice(0,2)));
+    if (v) u.voice = v;
+    const done = () => { speaking = false; then && then(); };
+    u.onend = done; u.onerror = done;
+    speechSynthesis.speak(u);
+  }
+
+  /* speech in */
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  let rec = null, listening = false, micBlockedCode = "";
+  function mic(kind, text, heard){
+    $("micDot").className = "dot" + (kind ? " " + kind : "");
+    const m = $("micText"); m.replaceChildren(document.createTextNode(text));
+    if (heard){ const s = document.createElement("span"); s.className = "heard"; s.textContent = heard; m.append(s); }
+  }
+  function wantListen(){ return isWearerView() && ["asking","alert1","alert2"].includes(state.phase); }
+  function startListening(){
+    if (!wantListen() || speaking || rec) return;
+    if (!SR){ mic("off", t().micNoSR); return; }
+    if (micBlockedCode){ mic("off", t().micBlocked(micBlockedCode)); return; }
+    rec = new SR();
+    rec.lang = L() === "en" ? "en-US" : "ja-JP"; rec.continuous = true; rec.interimResults = true;
+    rec.onstart = () => { listening = true; mic("on", t().micOn); };
+    rec.onresult = e => {
+      const w = WORDS[L()];
+      for (let i = e.resultIndex; i < e.results.length; i++){
+        const r = e.results[i], txt = ((r[0] && r[0].transcript) || "").trim();
+        if (!txt) continue;
+        mic("on", t().heard, txt);
+        if (w.help.test(txt)){ wearerHelp(t().byVoice(txt)); return; }
+        if (r.isFinal && w.fine.test(txt) && state.phase === "asking"){ wearerSafe(t().byVoice(txt)); return; }
+      }
+    };
+    rec.onerror = e => {
+      if (["not-allowed","service-not-allowed","audio-capture"].includes(e.error)){ micBlockedCode = e.error; mic("off", t().micBlocked(e.error)); }
+    };
+    rec.onend = () => { rec = null; listening = false; if (wantListen() && !speaking && !micBlockedCode) setTimeout(startListening, 300); };
+    try { rec.start(); } catch(e){ rec = null; }
+  }
+  function pauseListening(){ if (rec){ try { rec.abort(); } catch(e){} rec = null; } }
+  function stopListening(){ pauseListening(); if (!micBlockedCode) mic("", t().micOff); }
+
+  /* mic test */
+  $("micTestBtn").addEventListener("click", () => {
+    const out = $("micTest");
+    if (!SR){ out.textContent = t().micNoSR; return; }
+    pauseListening();
+    const r = new SR(); let got = "";
+    r.lang = L() === "en" ? "en-US" : "ja-JP"; r.interimResults = true; r.continuous = true;
+    r.onresult = e => { for (let i = e.resultIndex; i < e.results.length; i++){ got = (e.results[i][0] && e.results[i][0].transcript) || got; } out.textContent = t().micTestHeard(got); };
+    r.onerror = e => { out.textContent = t().micBlocked(e.error); if (["not-allowed","service-not-allowed","audio-capture"].includes(e.error)) micBlockedCode = e.error; };
+    r.onend = () => { if (!got && !/\(/.test(out.textContent)) out.textContent = t().micTestNone; };
+    out.textContent = t().micTestListening;
+    try { r.start(); setTimeout(() => { try { r.stop(); } catch(e){} }, 6000); } catch(e){ out.textContent = t().micBlocked(String(e.name || e)); }
+  });
+
+  /* family alert sound */
+  let audioCtx = null, soundOn = false, beepTimer = null;
+  function primeAudio(){ try { audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)(); audioCtx.resume(); soundOn = true; } catch(e){} }
+  function beep(){
+    if (!soundOn || !audioCtx) return;
+    const o = audioCtx.createOscillator(), g = audioCtx.createGain();
+    o.frequency.value = 880; o.connect(g); g.connect(audioCtx.destination);
+    g.gain.setValueAtTime(0.0001, audioCtx.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.3, audioCtx.currentTime + 0.02);
+    g.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.4);
+    o.start(); o.stop(audioCtx.currentTime + 0.45);
+    try { navigator.vibrate && navigator.vibrate([300,150,300]); } catch(e){}
+  }
+  const familyAlerting = () => role === "family1" ? ["alert1","alert2"].includes(state.phase) : role === "family2" ? state.phase === "alert2" : false;
+
+  /* reactions */
+  let spokeHandled = 0;
+  function onStateChanged(){
+    const p = state.phase;
+    if (isWearerView()){
+      if (p !== prevPhase){
+        if (p === "asking"){ spokeHandled = 0; startVibrating(); startListening(); }
+        else { stopVibrating(); }
+        if (p === "alert1" && prevPhase === "asking"){ say(t().sayAlerting, startListening); }
+        else if (p === "alert1" && state.reason === "help"){ say(t().sayAlerting, startListening); }
+        else if (p === "confirmed"){ pauseListening(); const s = S(); say(t().sayConfirmed(state.confirmedBy === "c1" ? s.c1Name : s.c2Name), () => mic("", t().micOff)); }
+        else if (p === "safe" || p === "idle"){ pauseListening(); if ("speechSynthesis" in window) speechSynthesis.cancel(); speaking = false; if (!micBlockedCode) mic("", p === "idle" ? t().micIdle : t().micOff); }
+      }
+      if (p === "asking" && state.spokeAt && spokeHandled !== state.spokeAt){
+        spokeHandled = state.spokeAt; stopVibrating();
+        say(t().sayAsk, startListening);
+      }
+    }
+    prevPhase = p;
+    clearInterval(beepTimer); beepTimer = null;
+    if (familyAlerting()){ beep(); beepTimer = setInterval(beep, 2500); }
+    render();
+  }
+
+  /* render */
+  function el(tag, attrs, kids){
+    const n = document.createElement(tag);
+    for (const k in (attrs || {})){ if (k === "on") n.addEventListener("click", attrs.on); else if (k === "text") n.textContent = attrs.text; else n.setAttribute(k, attrs[k]); }
+    (kids || []).forEach(c => n.append(c));
+    return n;
+  }
+  const big = (cls, text, on) => el("button", {class:"big " + cls, text, on});
+  const secsLeft = d => Math.max(0, Math.ceil((d - now())/1000));
+  function renderChrome(){
+    const x = t();
+    document.documentElement.lang = L();
+    document.title = L() === "en" ? "Kizuki prototype" : "キヅキ 試作版";
+    $("tagline").textContent = x.tagline;
+    const roles = $("roles"); roles.replaceChildren();
+    ROLE_KEYS.forEach((k, i) => roles.append(el("button", {text:x.roles[i], "aria-pressed":String(k === role), on:() => { if (k) location.hash = k; else { history.replaceState(null, "", location.pathname + location.search); readRole(); } }})));
+    document.querySelectorAll("#langs button").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.lang === L())));
+    ["hWearer","hF1","hF2","hSetup","lWearer","lC1","lC2","lAsk","lContact","hLog","thTime","thEvent","setupNote"].forEach(id => { $(id).textContent = x[id]; });
+    $("saveSetup").textContent = x.save; $("micTestBtn").textContent = x.micTest; $("resetBtn").textContent = x.reset; $("clearLog").textContent = x.clear;
+    if (!synced && $("sync").textContent && !docRef) $("sync").textContent = x.syncLocal;
+    if (synced) $("sync").textContent = x.syncLive;
+    if (state.phase === "idle" && !micBlockedCode && !listening) mic("", x.micIdle);
+  }
+  function renderWearer(){
+    const s = S(), x = t(), p = state.phase, inner = $("faceInner"), act = $("wearerActions");
+    $("wearerWho").textContent = s.wearerName;
+    $("face").className = "face" + (["alert1","alert2"].includes(p) ? " alerting" : (p === "safe" || p === "confirmed") ? " ok" : "");
+    inner.replaceChildren(); act.replaceChildren();
+    if (p === "idle"){
+      inner.append(el("div", {class:"face-msg", text:x.idleMsg}), el("div", {class:"face-sub", text:x.idleSub}));
+      act.append(big("b-quiet", x.simulate, simulateFall));
+    } else if (p === "asking"){
+      inner.append(el("div", {class:"face-q", text:x.ask}), el("div", {class:"face-sub", text:state.spokeAt ? "" : x.vibrating}), el("div", {class:"face-count", id:"count"}));
+      act.append(el("div", {class:"row"}, [big("b-primary", x.fine, () => wearerSafe(x.byTap)), big("b-help", x.help, () => wearerHelp(x.byTap))]));
+    } else if (p === "safe"){
+      inner.append(el("div", {class:"face-msg", text:x.safeMsg}), el("div", {class:"face-sub", text:x.safeSub}));
+      act.append(big("b-quiet", x.back, resetIdle));
+    } else if (p === "alert1" || p === "alert2"){
+      inner.append(el("div", {class:"face-msg", text:x.alertingMsg}), el("div", {class:"face-sub", text:x.alertingSub(p === "alert1" ? s.c1Name : s.c2Name)}));
+    } else if (p === "confirmed"){
+      inner.append(el("div", {class:"face-msg", text:x.confirmedMsg}), el("div", {class:"face-sub", text:x.confirmedSub(state.confirmedBy === "c1" ? s.c1Name : s.c2Name)}));
+      act.append(big("b-quiet", x.back, resetIdle));
+    }
+    renderClock();
+  }
+  function renderClock(){
+    const C = 282.74, ring = $("ring"), c = $("count"), x = t();
+    if (state.phase === "asking"){
+      const total = S().askSec*1000, left = Math.max(0, state.askDeadline - now());
+      ring.style.strokeDashoffset = String(C * (1 - left/total));
+      if (c) c.textContent = String(secsLeft(state.askDeadline));
+    } else ring.style.strokeDashoffset = String(C);
+    document.querySelectorAll("[data-clock]").forEach(n => {
+      const since = Math.max(0, Math.round((now() - state.alertAt)/1000));
+      let s = x.sent(since);
+      if (state.phase === "alert1" && n.dataset.clock === "c1") s += x.next(secsLeft(state.contactDeadline));
+      else if (state.phase === "alert2") s += x.last;
+      n.textContent = s;
+    });
+  }
+  function renderFamily(which){
+    const s = S(), x = t(), p = state.phase, body = $(which === "c1" ? "f1Body" : "f2Body");
+    $(which === "c1" ? "f1Who" : "f2Who").textContent = which === "c1" ? s.c1Name : s.c2Name;
+    body.replaceChildren();
+    const mine = which === "c1" ? ["alert1","alert2"].includes(p) : p === "alert2";
+    if (mine){
+      body.append(el("div", {class:"alert", role:"alert"}, [
+        el("div", {class:"t", text:x.famAlertT}),
+        el("div", {text:state.reason === "help" ? x.famWhyHelp(s.wearerName) : x.famWhyFall(s.wearerName)}),
+        el("div", {class:"clock", "data-clock":which})
+      ]), big("b-primary", x.seen, () => confirmSeen(which)));
+    } else if (p === "confirmed"){
+      body.append(el("div", {class:"done"}, [el("strong", {text:state.confirmedBy === which ? x.youConfirmed : x.otherConfirmed(state.confirmedBy === "c1" ? s.c1Name : s.c2Name)}), document.createTextNode(x.closed)]));
+    } else if (which === "c2" && p === "alert1"){
+      body.append(el("div", {class:"calm", text:x.waitC1(s.c1Name)}));
+    } else if (p === "asking"){
+      body.append(el("div", {class:"calm", text:x.asking(s.wearerName)}));
+    } else {
+      body.append(el("div", {class:"calm", text:x.noAlerts(s.wearerName)}));
+    }
+    const snd = $(which === "c1" ? "f1Sound" : "f2Sound"); snd.replaceChildren();
+    if (role === (which === "c1" ? "family1" : "family2") && !soundOn){
+      snd.append(document.createTextNode(x.soundOff + " "), el("button", {text:x.soundOn, on:() => { primeAudio(); beep(); render(); }}));
+    }
+  }
+  function renderLog(){
+    const tb = $("log"); tb.replaceChildren();
+    const rows = (state.log || []).slice().reverse();
+    if (!rows.length){ tb.append(el("tr", {}, [el("td", {class:"empty", colspan:"2", text:t().logEmpty})])); return; }
+    rows.forEach(r => tb.append(el("tr", {}, [el("td", {class:"t", text:r.t}), el("td", {text:r.text})])));
+  }
+  let setupDirty = false;
+  function fillSetup(){
+    if (setupDirty) return;
+    const s = S(), f = $("setup");
+    ["wearerName","c1Name","c2Name","askSec","contactSec"].forEach(k => { if (document.activeElement !== f.elements[k]) f.elements[k].value = s[k]; });
+  }
+  $("setup").addEventListener("input", () => { setupDirty = true; });
+  $("saveSetup").addEventListener("click", () => {
+    const f = $("setup"), num = (v, d, lo, hi) => { const n = parseInt(v, 10); return isNaN(n) ? d : Math.min(hi, Math.max(lo, n)); };
+    const cur = S();
+    const settings = Object.assign({}, state.settings, {
+      wearerName: f.elements.wearerName.value.trim() || cur.wearerName,
+      c1Name: f.elements.c1Name.value.trim() || cur.c1Name,
+      c2Name: f.elements.c2Name.value.trim() || cur.c2Name,
+      askSec: num(f.elements.askSec.value, BASE.askSec, 10, 120),
+      contactSec: num(f.elements.contactSec.value, BASE.contactSec, 5, 600)
+    });
+    setupDirty = false;
+    commit({settings}, t().logSetup(settings.askSec, settings.contactSec));
+  });
+  document.querySelectorAll("#langs button").forEach(b => b.addEventListener("click", () => {
+    if (b.dataset.lang === L()) return;
+    const d = T[b.dataset.lang].defaults, old = T[L()].defaults, s = Object.assign({}, state.settings, {lang:b.dataset.lang});
+    ["wearerName","c1Name","c2Name"].forEach(k => { if (!s[k] || s[k] === old[k]) s[k] = d[k]; });
+    setupDirty = false; pauseListening();
+    commit({settings:s});
+  }));
+  $("resetBtn").addEventListener("click", resetIdle);
+  $("clearLog").addEventListener("click", () => { state = Object.assign({}, state, {log:[]}); commit({}); });
+
+  function render(){ renderChrome(); renderWearer(); renderFamily("c1"); renderFamily("c2"); renderLog(); fillSetup(); }
+  readRole();
+  connect();
+})();
+</script>
+</body>
+</html>
